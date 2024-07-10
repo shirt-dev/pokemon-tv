@@ -85,12 +85,12 @@ app.get('/m3u8/', async (req, res) => {
                 const rhost = new URL(req.query.url).origin
                 const vPath = new URL(req.query.url).pathname.split('/').slice(0, -1).join('/');
                 res.setHeader('Content-Type', 'audio/x-mpegurl');
-                vHead.body = vHead.body.replace(/^\//gm, rhost + '/');
+                vHead.body = vHead.body.replace(/^\//gm, `${req.headers.referer}m3u8/?url=${rhost}/`);
                 if(vHead.body.match(/URI="vtt/)){
-                    vHead.body = vHead.body.replace(/URI="vtt/gm, 'URI="' + rhost + vPath + '/vtt');
+                    vHead.body = vHead.body.replace(/URI="vtt/gm, `URI="${req.headers.referer}vtt${rhost}${vPath}/vtt`);
                 }
                 if(vHead.body.match(/\.ts$/m)){
-                    vHead.body = vHead.body.replace(/^playlist/gm, rhost + vPath + '/playlist');
+                    vHead.body = vHead.body.replace(/^playlist/gm, `${req.headers.referer}ts/?url=${rhost}${vPath}/playlist`);
                 }
                 res.end(vHead.body);
             }
@@ -106,6 +106,17 @@ app.get('/m3u8/', async (req, res) => {
         return;
    }
    res.end('');
+});
+
+app.get('/ts/', async (req, res) => {
+    if(req.query.url && req.query.url.match(domainRegex)){
+        const stream = got.stream(req.query.url)
+        stream.on('error', error => {
+            res.status(404);
+            res.end('');
+        })
+        stream.pipe(res);
+    }
 });
 
 // app start

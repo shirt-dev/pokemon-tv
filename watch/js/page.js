@@ -430,6 +430,11 @@ async function showPlayerBox(){
             console.log('master url:', masterUrl);
         }
         else{
+            videoData = await doReq('/m3u8/?url=' + encodeURIComponent(v.stream_url));
+            if(videoData.ok){
+                videoUrl = '/m3u8/?url=' + encodeURIComponent(v.stream_url);
+                m3u8data.use = true;
+            }
             /*
             videoData = await doReq('/m3u8/?url=' + encodeURIComponent(v.stream_url));
             if(videoData.ok){
@@ -492,15 +497,6 @@ async function showPlayerBox(){
     if(typeof v.captions == 'string' && v.captions != ''){
         captionsUrl = '/vtt/?url=' + encodeURIComponent(v.captions);
     }
-    
-    videojs.Vhs.xhr.beforeRequest = (options) => {
-        if(m3u8data.use && v.stream_url != ''){
-            if(!options.uri.match(/\/m3u8\//) && options.uri.match(/\.m3u8$/)){
-                options.uri = '/m3u8/?url=' + encodeURIComponent(options.uri);
-            }
-        }
-        return options;
-    };
     
     removeChildEls('player-box');
     genVideoEl(videoUrl, posterUrl, captionsUrl);
